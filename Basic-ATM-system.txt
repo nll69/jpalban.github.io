@@ -1,0 +1,111 @@
+import mysql.connector as mysql
+
+print ('''Welcome to 1cBank!
+
+Please Choose Transaction
+
+1) Balance
+2) Deposit
+3) Withdraw
+4) Exit
+
+''')
+
+
+db = mysql.connect(
+    host = 'localhost',
+    user = 'root',
+    password = '',
+    database = 'atm'
+)
+
+cursor = db.cursor()
+
+
+def saveChanges(newRecord):
+    sql = f"INSERT INTO records VALUES(DEFAULT, '{newRecord.activity}', {newRecord.amount}, {newRecord.balance})"
+    cursor.execute(sql)
+    db.commit()
+
+def GetBalance():
+    cursor.execute('SELECT max(id) FROM records')
+    result = cursor.fetchall()[0][0]
+    if result != None:
+        cursor.execute(f"SELECT balance FROM records WHERE id = {result}")
+        result = cursor.fetchall()[0][0]
+        return result
+    else:
+        return 0
+
+class Record:
+
+    def __init__(self, activity, amount, balance):
+        self.activity = activity
+        self.amount = amount
+        self.balance = balance
+
+
+
+while True:
+
+    Trials = 3
+    UserPin = 1234
+
+    while Trials != 0:
+        Pin = int(input("Please Enter Your 4 digit Pin Number: "))
+        if Pin != UserPin:
+            Trials -= 1
+            print('Wrong Pin Number, You have', Trials, 'Trials Left')
+        else:
+            UserChoice = int(input('Enter Transaction: '))
+            break
+
+    if(UserChoice == 1):
+        print('Your Balance is: $', GetBalance())
+        anothertrans = input('Would You Like To Continue? Y/N: ')
+        if(anothertrans == 'y'):
+            continue
+        else:
+            print('Thank You For Using 1cBank!')
+            break
+    elif(UserChoice == 2):
+        deposit = float(input('Enter Amount to Deposit: '))
+        totalbalance = GetBalance() + deposit
+
+        newRecord = Record('Deposit', deposit, totalbalance)
+        saveChanges(newRecord)
+
+        print('$', deposit, ' Has been Deposited to your Account')
+        print('Your Balance is now: $', totalbalance)
+        anothertrans = input('Would You Like To Continue? Y/N: ')
+        if (anothertrans == 'y'):
+            continue
+        else:
+            print('Thank You For Using 1cBank!')
+            break
+    elif(UserChoice == 3):
+        withdraw = float(input('Enter Amount to Withdraw: '))
+        balance = GetBalance()
+        if (balance > withdraw):
+            total = balance - withdraw
+
+            newRecord = Record('Withdraw', withdraw, total)
+            saveChanges(newRecord)
+
+
+            print('$', withdraw, ' Has been Withdrawn from your Account')
+            print('Your Balance is now: $', total)
+        else:
+            print('Insufficient Balance')
+        anothertrans = input('Would You Like To Continue? Y/N: ')
+        if (anothertrans == 'y'):
+            continue
+        else:
+            print('Thank You For Using 1cBank!')
+            break
+    elif(UserChoice == 4):
+        print('Thank You For Using 1cBank!')
+        exit()
+
+    else:
+        print('No Selected Transaction')
